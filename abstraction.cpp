@@ -1,35 +1,43 @@
 #include<iostream>
 
-class Shape{
-    public:
-    virtual void draw() = 0;
+class Shape {
+public:
+    virtual double calculateArea() = 0;
 };
 
-class Triangle : public Shape{
-    public:
-    void draw(){
-        std::cout << "Drawing triangle.." << std::endl;
+class Circle : public Shape {
+public:
+    Circle(double r){
+        radius = r;
     }
+    double calculateArea() override { 
+        return 3.14 * radius * radius; 
+    }
+private:
+    double radius;
 };
 
-class Circle : public Shape{
-    public :
-    void draw(){
-        std::cout << "Drawing circle.." << std::endl;
+class Rectangle : public Shape {
+public:
+    Rectangle(double w, double h) : width(w), height(h) {}
+    double calculateArea() override { 
+        return width * height; 
     }
+private:
+    double width;
+    double height;
 };
+
 
 int main() {
-    Shape *pS;
+    Shape* shapes[2];
+    shapes[0] = new Circle(5);
+    shapes[1] = new Rectangle(3, 4);
 
-    Triangle t;
-    Circle c;
-
-    t.draw();
-    c.draw();
-
-    pS = &c;
-    pS -> draw();
+    for (int i = 0; i < 2; i++) {
+        std::cout << "Area of shape " << i << " is " << shapes[i]->calculateArea() << std::endl;
+        delete shapes[i];
+    }
 
     return 0;
 }
