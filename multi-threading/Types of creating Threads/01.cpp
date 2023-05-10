@@ -1,8 +1,4 @@
-/*
-Types of creating threads 
-
-1. Function Pointer
-*/
+// Using Function Pointer
 
 #include<iostream>
 #include<thread>
@@ -17,8 +13,12 @@ int main(){
 
     std::thread thread2(someFunc<std::string>, "Hello", " World ");
 
-
     thread1.join();
     thread2.join();
     return 0;
 }
+
+/*
+Note:
+    If we create multiple thread at the same time it doesn't guarentee which one will start first
+*/

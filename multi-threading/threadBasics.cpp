@@ -1,7 +1,3 @@
-/*
-Thread basics
-*/
-
 #include<iostream>
 #include<thread>
 
