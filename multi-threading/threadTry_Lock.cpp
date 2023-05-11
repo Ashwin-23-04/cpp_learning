@@ -9,10 +9,12 @@ std::try_lock() tries to lock all the lockable objects passed in it in a given o
 #include<chrono>
 
 int x=0, y=0;
+int count = 5;
+int fcount = 5;
 std::mutex m1, m2;
 
 void incFuction(int &variableName, std::mutex &m){
-    for(int i = 0; i < 5; i++){
+    for(int i = 0; i < fcount; i++){
         m.lock();
         variableName = 1;
         m.unlock();
@@ -21,7 +23,6 @@ void incFuction(int &variableName, std::mutex &m){
 }
 
 void containerFunction(){
-    int count = 5;
     int sum = 0;
     while (count > 0)
     {
