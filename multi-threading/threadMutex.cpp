@@ -7,6 +7,7 @@ std::mutex m;
 
 void inc(){
     m.lock();
+    std::cout << std::this_thread::get_id() << std::endl;
     x++; // this is a critical section 
     m.unlock();
 }
