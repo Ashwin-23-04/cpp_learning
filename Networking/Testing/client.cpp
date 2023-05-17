@@ -17,7 +17,6 @@ void sendMsg(int clientSocket){
 
 int main(){
     int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-
     struct sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(8082);
@@ -29,7 +28,6 @@ int main(){
         read(clientSocket, buffer, 1024);
 
         std::cout << buffer << std::endl;
-
         std::thread t1(sendMsg, clientSocket);
         t1.detach();
 

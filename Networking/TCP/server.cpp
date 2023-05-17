@@ -76,8 +76,6 @@ int main(){
     }
     std::cout << "[+] Listening " << std::endl;
     listen(serverSocket, 3); 
-    // socklen_t len = sizeof(serverAddress);
-    // std::cout << "peer name" << getpeername(serverSocket, (struct sockaddr*)&serverAddress, &len);
     while (true){
         int clientSocket;
         struct sockaddr_in clientAddress;

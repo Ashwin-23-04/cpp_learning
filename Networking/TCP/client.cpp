@@ -8,7 +8,7 @@ void sendMsg(int clientSocket){
     while(true){
         std::cout << ">" ;
         std::string msg ;
-        std::cin >> msg;
+        std::getline(std::cin >> std::ws, msg);
 
         const char *message = (char *)&msg;
         send(clientSocket, message, strlen(message), 0);
@@ -20,7 +20,7 @@ int main(){
 
     struct sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(8080);
+    serverAddress.sin_port = htons(8082);
     inet_pton(AF_INET, "127.0.0.1", &serverAddress.sin_addr);
 
     connect(clientSocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress));
@@ -28,8 +28,7 @@ int main(){
         char buffer[1024] = {0};
         read(clientSocket, buffer, 1024);
 
-        std::cout << "[+] Server message: " << buffer << std::endl;
-
+        std::cout << buffer << std::endl;
         std::thread t1(sendMsg, clientSocket);
         t1.detach();
 
