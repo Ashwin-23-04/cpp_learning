@@ -4,12 +4,13 @@
 #include<unistd.h>
 #include<thread>
 
-#define PORT 8082
+#define PORT 8081
 
 struct Data{
     int id;
     int clientSocket;
     std::string name;
+    bool waiting = false;
     Data(int idNumber,int cS, std::string cName) : id(idNumber), clientSocket(cS), name(cName) {}
 };
 
@@ -35,18 +36,22 @@ int main(){
     }
     std::cout << "[+] Listening..."<< std::endl;
     listen(s, 3);
+    int clientSocket;
+    struct sockaddr_in clientAddress;
+    socklen_t clientAddrlen = sizeof(clientAddress);
     while (true){
-        int clientSocket;
-        struct sockaddr_in clientAddress;
-        socklen_t clientAddrlen = sizeof(clientAddress);
-        clientSocket = accept(s, (struct sockaddr *) &clientAddress, &clientAddrlen);
+        try {
+            clientSocket = accept(s, (struct sockaddr *) &clientAddress, &clientAddrlen);
 
-        if(clientSocket < 0){
-            std::cout << "[-] Error on accepting client" << std::endl;
-        }else{
-            std::cout << "[+] Client Accepted " << std::endl;
-            std::thread startThread(serverStartMsg, clientSocket);
-            startThread.detach();
+            if(clientSocket <= 0){
+                std::cout << "[-] Error on accepting client" << std::endl;
+            }else{
+                std::cout << "[+] Client Accepted " << std::endl;
+                std::thread startThread(serverStartMsg, clientSocket);
+                startThread.detach();
+            }
+        }catch(...){
+            continue;
         }
     }
     close(s);
@@ -55,9 +60,9 @@ int main(){
 
 void serverStartMsg(int clientSocket){
     std::string qName = "What is your name?";
-    std::string name;
+    char name[1024] = {0};
     send(clientSocket, &qName, qName.length(), 0);
-    read(clientSocket, &name, 1024);
+    read(clientSocket, name, 1024);
     id += 1;
     std::string idOfClient = "Your id is " + std::to_string(id);
     send(clientSocket, &idOfClient, idOfClient.length(), 0);
@@ -69,17 +74,19 @@ void serverStartMsg(int clientSocket){
         const char *displayConnectUserOption = "\nEnter user ID to connect ";
         const char *invalidOption = "Invalid";
         bool invalid;
-        std::string userIdToConnect;
+        std::string userIdToConnect = "";
         send(clientSocket, displayOptions, strlen(displayOptions), 0);
-        std::string selectedOption;
+        std::string selectedOption = "";
         read(clientSocket, &selectedOption, 1024);
+
         if(std::stoi(selectedOption) == 1){
             std::cout << clientSocket << " has selected option 1" << std::endl;
             send(clientSocket, displayConnectUserOption, strlen(displayConnectUserOption), 0);
             read(clientSocket, &userIdToConnect, 1024);
-            if(std::stoi(userIdToConnect) <= id && std::stoi(userIdToConnect) !=0){
+
+            if(std::stoi(userIdToConnect) <= id && std::stoi(userIdToConnect) !=0){          
                 for(int i=0; i < clientSockets.size(); i++){
-                    if(clientSockets[i].id == std::stoi(userIdToConnect)){
+                    if(clientSockets[i].id == std::stoi(userIdToConnect) && clientSockets[i].waiting == true){
                         invalid = false;
                         std::cout << "user ID" << std::to_string(userId) << std::endl;
                         std::string goingToConnectUserID = std::to_string(userId);
@@ -97,13 +104,18 @@ void serverStartMsg(int clientSocket){
             if(invalid){
                 send(clientSocket, invalidOption, strlen(invalidOption), 1024);
             }
+            selectedOption = "";
         }else if(std::stoi(selectedOption) == 2){
             std::cout << clientSocket << " has selected option 2" << std::endl;
             std::thread waitThread(waitingForClient, clientSocket);
             waitThread.join();
+            selectedOption = "";
             break;
         }else if(std::stoi(selectedOption) == 3){
             std::cout << clientSocket << " has selected option 3" << std::endl;
+            selectedOption = "";
+            const char *msg = "Quit";
+            send(clientSocket, msg, strlen(msg), 0);
             break;
         }else{
             std::cout << clientSocket << " has selected Invalid Option" << std::endl;
@@ -113,41 +125,42 @@ void serverStartMsg(int clientSocket){
 }
 
 void connectToClient(int clientSocket, int connectWithSocket){
-    const char *displayOptions = "\n1. Accept\n2.Reject";
+    const char *displayOptions = "\n1. Accept\n2.Reject\n";
     send(connectWithSocket, displayOptions, strlen(displayOptions), 0);
     std::string selectedOption;
     read(connectWithSocket, &selectedOption, 1024);
     if(std::stoi(selectedOption) == 1){
-        std::cout << "Accepted" << std::endl;
+        const char *msg = "Accepted";
+        send(clientSocket, msg, strlen(msg), 0);
+        for(int i=0; i < clientSockets.size(); i++){
+        if(clientSockets[i].clientSocket == connectWithSocket){
+            clientSockets[i].waiting = false;
+        }
+    }
         // std::thread communicationThread(handleCommunication, clientSocket, connectWithSocket);
         // communicationThread.detach();
         handleCommunication(clientSocket, connectWithSocket);
     }else{
-        std::cout << "Rejected" << std::endl;
+        const char *msg = "Rejected";
+        send(clientSocket, msg, strlen(msg), 0);
+        send(connectWithSocket, msg, strlen(msg), 0);
     }
 }
 
 void waitingForClient(int clientSocket){
     const char *waitingMsg = "waiting...";
-    std::string authentication;
-    std::string connectFromSocket;
-    char *selectedOption;
-    while (true){
-        std::cout << waitingMsg  << std::endl;
-        read(clientSocket, &connectFromSocket, 1024);
-        read(std::stoi(connectFromSocket), &authentication, 1024);
-        send(clientSocket, &authentication, authentication.length(), 0);
-
-        read(clientSocket, selectedOption, 1024);
-        send(std::stoi(connectFromSocket), selectedOption, strlen(selectedOption), 0);
-        if(std::stoi(selectedOption) == 1){
-            // std::thread communicationThread(handleCommunication, clientSocket, std::stoi(connectFromSocket));
-            // communicationThread.detach();
-            handleCommunication(clientSocket,std::stoi(connectFromSocket));
-        }else{
-            continue;
+    for(int i=0; i < clientSockets.size(); i++){
+        if(clientSockets[i].clientSocket == clientSocket){
+            clientSockets[i].waiting = true;
         }
     }
+    std::string wait;
+    std::string connectFromSocket;
+
+    std::cout << waitingMsg  << std::endl;
+    read(clientSocket, &connectFromSocket, 1024);
+    read(std::stoi(connectFromSocket), &wait, 1024);
+    
 }
 
 void handleCommunication(int client, int clientToSpeak){

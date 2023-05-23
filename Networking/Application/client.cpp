@@ -4,7 +4,7 @@
 #include<unistd.h>
 #include<thread>
 
-#define PORT 8082
+#define PORT 8081
 
 void sendMsg(int s);
 
@@ -18,11 +18,16 @@ int main(){
     connect(s, (struct sockaddr *) &serverAddress, sizeof(serverAddress));
 
     while(true){
-        char messageFromServer[1024] = {0} ;
-        read(s, messageFromServer, 1024);
-        std::cout << messageFromServer << std::endl;
-        std::thread t1(sendMsg, s);
-        t1.detach();
+        try {
+            char messageFromServer[1024] = {0} ;
+            read(s, messageFromServer, 1024);
+            std::cout << messageFromServer << std::endl;
+            std::thread t1(sendMsg, s);
+            t1.detach();
+        }catch(...){
+            std::cout << "Exiting.." << std::endl;
+            break;
+        }
     }
     close(s);
     return 0;
