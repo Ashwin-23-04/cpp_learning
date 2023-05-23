@@ -7,7 +7,6 @@
 
 void startingConversation(int soc);
 void handleCommunication(int soc, std::string name);
-// void waiting(int soc);
 
 int main(){
     int soc = socket(AF_INET, SOCK_STREAM, 0);
@@ -81,6 +80,7 @@ void startingConversation(int soc){
             std::string auth ;
             read(soc, &auth, 1024);
             if(std::stoi(auth) == 1){
+                std::cout << "[+] Accepted your request." << std::endl;
                 char buffer[1024] = {0};
                 while (true) {
                     std::cout << "> " ;

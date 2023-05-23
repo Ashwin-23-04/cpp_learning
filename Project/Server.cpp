@@ -18,8 +18,7 @@ std::vector<Data> clientSockets;
 unsigned int id = 0;
 
 void startConversation(int clientSocket);
-void handleCommunication(int clientSocket, int clientToSpeak);
-// void waiting(int clientSocket);
+void handleCommunication(int clientSocket, int clientToSpeak, std::string name);
 
 int main(){
     int s = socket(AF_INET, SOCK_STREAM, 0);
@@ -116,7 +115,7 @@ void startConversation(int clientSocket){
                         send(clientSocket, validReply, strlen(validReply), 0);
                     }
                 }
-                handleCommunication(clientSocket, clientToSpeak);
+                handleCommunication(clientSocket, clientToSpeak, name);
             }
         }
     }catch(...){
@@ -127,11 +126,13 @@ void startConversation(int clientSocket){
     }
 }
 
-void handleCommunication(int clientSocket, int clientToSpeak){
+void handleCommunication(int clientSocket, int clientToSpeak, std::string name){
     std::cout << "Client socket :" << clientSocket << "\tClient to speak : " << clientToSpeak << std::endl;
-    const char *displayOptions = "1. Accept 2.Reject";
+    std::string display = "1. Accept 2.Reject from " + name;
+    const char *displayOptions = display.c_str();
+
     char selectedOption[10] = {0};
-    send(clientToSpeak, displayOptions, strlen(displayOptions), 0);
+    send(clientToSpeak, displayOptions, display.size(), 0);
     read(clientToSpeak, selectedOption, 10);
     std::cout << std::stoi(selectedOption) << std::endl;
     send(clientSocket, selectedOption, strlen(selectedOption), 0);
