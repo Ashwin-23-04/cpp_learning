@@ -56,13 +56,13 @@ void startConversation(int clientSocket){
         const char *qName = "What is your name?";
         char name[50] = {0};
         send(clientSocket, qName, strlen(qName), 0);
-        read(clientSocket, name, strlen(name));
+        read(clientSocket, name, 1024);
         std::cout << "Client named " << name << " joined!" << std::endl;
         id += 1;
         std::string userID = std::to_string(id);
         send(clientSocket, &userID, userID.length(), 0);
         std::string dummy;
-        read(clientSocket, &dummy, dummy.length());
+        read(clientSocket, &dummy, sizeof(dummy));
         clientSockets.push_back(Data(userID, clientSocket, name));
 
         const char *displayOptions = "1. Connect with user 2. Wait to connect 3.Exit";
@@ -70,7 +70,7 @@ void startConversation(int clientSocket){
         send(clientSocket, displayOptions, strlen(displayOptions), 0);
         char selectedOption[10] = {0};
         while(true){
-            read(clientSocket, selectedOption, strlen(selectedOption));
+            read(clientSocket, selectedOption, sizeof(selectedOption));
             if((std::stoi(selectedOption) == 1) || (std::stoi(selectedOption) == 2) || (std::stoi(selectedOption) == 3)){
                 const char *validReply = "Valid";
                 send(clientSocket, validReply, strlen(validReply), 0);
@@ -95,7 +95,7 @@ void startConversation(int clientSocket){
                 char selectedUserID[1024] = {0};
                 send(clientSocket, toConnectOption, strlen(toConnectOption), 0);
                 while(true){
-                    read(clientSocket, selectedUserID, strlen(selectedUserID));
+                    read(clientSocket, selectedUserID, sizeof(selectedUserID));
                     std::cout << "User ID: " << selectedUserID << std::endl;
                     for(Data data: clientSockets){
                         if(data.id == selectedUserID && selectedUserID != userID){
@@ -133,7 +133,7 @@ void handleCommunication(int clientSocket, int clientToSpeak, std::string name){
 
     char selectedOption[10] = {0};
     send(clientToSpeak, displayOptions, display.size(), 0);
-    read(clientToSpeak, selectedOption, strlen(selectedOption));
+    read(clientToSpeak, selectedOption, sizeof(selectedOption));
     std::cout << std::stoi(selectedOption) << std::endl;
     send(clientSocket, selectedOption, strlen(selectedOption), 0);
     if(std::stoi(selectedOption) == 1){
