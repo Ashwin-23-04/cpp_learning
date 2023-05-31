@@ -50,12 +50,6 @@ void sendMsg(int soc, std::string name){
         send(soc, input.c_str(), input.size(), 0);
         if(input == "q" || input == "Q"){break;}
     }
-
-    // if(input.compare("0 [" + name + "]") == 0){
-    //     std::string availableClients = receiveMsg(soc);
-    //     std::cout << availableClients << std::endl;
-    // }
-    
 }
 
 void receiveThread(int soc){
@@ -87,8 +81,6 @@ int main(){
     close(soc);
     return 0;
 }
-
-
 
 void startingConversation(int soc){
     try{

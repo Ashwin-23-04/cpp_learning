@@ -68,11 +68,10 @@ void startConversation(int clientSocket){
         clientSockets.push_back(Data(userID, clientSocket, name));
         std::string availableClients = getAvailableUser(userID);
         sendMsg(clientSocket, availableClients);
-        std::string info = "\nEnter either of this format \n\n(a) Id number ~ message \n(b) Id num1, Id num2 ,... ~ message \n(c) 0 to show available user \n(d) q to quit\n";
+        std::string info = "\nEnter either of this format \n\n(a) Id number~message \n(b) Id num1, Id num2, etc...~message \n\n (or)\n\n 0 - show available user \n q - quit\n";
         sendMsg(clientSocket, info);
         std::thread t1(handleClient, clientSocket, userID);
         t1.join();
-        
 
     }catch(...){
         clientSockets.erase(std::remove_if(clientSockets.begin(), clientSockets.end(),[&](Data const &data){
@@ -84,61 +83,6 @@ void startConversation(int clientSocket){
         return data.clientSocket == clientSocket;
     }),clientSockets.end());
     close(clientSocket);
-}
-
-std::vector<std::string> split(const std::string &str, char sep){
-    std::vector<std::string> tokens;
-    std::string token;
-    std::stringstream ss(str);
-    std::string sep2 = "";
-    sep2 = sep;
-    while (std::getline(ss, token, sep)) {
-        if (!token.empty()) {
-            if(token.compare(sep2) != 0){
-                tokens.push_back(token);
-            }
-        }
-    }
-    return tokens;
-}
-
-void handleClient(int clientSocket, std::string userID) {
-    while(true){
-        std::string msg = receiveMsg(clientSocket);
-        std::vector<std::string> tokens = split(msg, '~');
-        // for(auto i: tokens){
-        //     std::cout << i << std::endl;
-        // }
-        if(tokens.front() == "0"){
-            std::string availableClients = getAvailableUser(userID);
-            sendMsg(clientSocket, availableClients);
-        }else if(tokens.front() == "q" || tokens.front() == "Q"){
-            std::string exitMsg = "Exiting...";
-            sendMsg(clientSocket, exitMsg);
-            break;
-        }else{  
-
-            std::vector<std::string> clientsToSend = split(tokens.front(), ',');
-            for(auto i: clientsToSend){
-                bool available = false;
-                available = checkAvailableClients(userID,i);
-                if(available){
-                    for(Data data: clientSockets){
-                        if(data.id == i){
-                            sendMsg(data.clientSocket, tokens.back());
-                        }
-                    }
-                }
-            }
-        }
-
-    }
-    clientSockets.erase(
-    std::remove_if(clientSockets.begin(), clientSockets.end(), [&](Data const & data) {
-        return data.clientSocket == clientSocket;
-    }),
-    clientSockets.end());
-    close(clientSocket);   
 }
 
 std::string receiveMsg(int clientSocket){
@@ -162,7 +106,7 @@ void sendMsg(int clientSocket, std::string receivedString){
 }
 
 std::string getAvailableUser(std::string userID){
-    std::string availableClients;
+    std::string availableClients = "Available Users At The Movement \n";
     bool notAvailable = true;
     for(Data data:clientSockets){
         if(data.id != userID){
@@ -176,7 +120,6 @@ std::string getAvailableUser(std::string userID){
     }
     return availableClients;
 }
-   
 
 bool checkAvailableClients(std::string userID, std::string id){
     bool available = false;
@@ -186,4 +129,56 @@ bool checkAvailableClients(std::string userID, std::string id){
         }
     }
     return available;
+}
+
+std::vector<std::string> split(const std::string &str, char sep){
+    std::vector<std::string> tokens;
+    std::string token;
+    std::stringstream ss(str);
+    std::string sep2 = "";
+    sep2 = sep;
+    while (std::getline(ss, token, sep)) {
+        if (!token.empty() && token.compare(sep2) != 0) {
+                tokens.push_back(token);
+        }
+    }
+    return tokens;
+}
+
+void handleClient(int clientSocket, std::string userID) {
+    while(true){
+        std::string msg = receiveMsg(clientSocket);
+        std::vector<std::string> tokens = split(msg, '~');
+        // for(auto i: tokens){
+        //     std::cout << i << std::endl;
+        // }
+        if(tokens.front() == "0"){
+            std::string availableClients = getAvailableUser(userID);
+            sendMsg(clientSocket, availableClients);
+        }else if(tokens.front() == "q" || tokens.front() == "Q"){
+            std::string exitMsg = "Exiting...";
+            sendMsg(clientSocket, exitMsg);
+            break;
+        }else{  
+            std::vector<std::string> clientsToSend = split(tokens.front(), ',');
+            for(auto i: clientsToSend){
+                bool available = false;
+                available = checkAvailableClients(userID,i);
+                if(available){
+                    for(Data data: clientSockets){
+                        if(data.id == i){
+                            sendMsg(data.clientSocket, tokens.back());
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+    clientSockets.erase(
+    std::remove_if(clientSockets.begin(), clientSockets.end(), [&](Data const & data) {
+        return data.clientSocket == clientSocket;
+    }),
+    clientSockets.end());
+    close(clientSocket);   
 }
