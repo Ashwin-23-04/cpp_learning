@@ -84,25 +84,28 @@ void startingConversation(int soc){
             read(soc, &auth, sizeof(auth));
             if(std::stoi(auth) == 1){
                 std::cout << "[+] Accepted your request." << std::endl;
-                char buffer[1024] = {0};
+                char *buffer;
                 while (true) {
-                    std::cout << "> " ;
-                    std::string msg ;
+
+                    std::cout << "> ";
+                    std::string msg;
                     std::getline(std::cin >> std::ws, msg);
-                    char *message = (char *)&msg;
+                    std::string message = msg + "   [<] " + name;
+                    size_t dataLength = htonl(message.size());
+                    send(soc, &dataLength, sizeof(size_t), 0);
+                    send(soc, message.c_str(), message.size(), 0);
 
-                    const char* strToAddFirst = "   [<] ";
-                    const char* strToAddSecond = name.c_str();
-                    std::strcat(message, strToAddFirst);
-                    std::strcat(message, strToAddSecond);
+                    recv(soc, &dataLength, sizeof(size_t), 0);
+                    dataLength = ntohl(dataLength );
+                    buffer = new char[ dataLength ];
 
+                    recv(soc,&(buffer[0]),dataLength,0);
+                    std::string receivedString;
+                    receivedString.assign(buffer,dataLength);
+                    buffer = nullptr;
 
-                    send(soc, message, strlen(message), 0);
-                    if (read(soc, buffer, sizeof(buffer)) <= 0) {
-                        break;
-                    }
-                    std::cout << buffer << std::endl;
-                    memset(buffer, 0, sizeof(buffer));
+                    std::cout << receivedString << std::endl;
+                    
                 }
                 break;
             }else if(std::stoi(auth) == 2){
@@ -141,29 +144,30 @@ void handleCommunication(int soc, std::string name){
         }
         memset(displayOptions, 0, sizeof(displayOptions));
         if(std::stoi(selectedOption) == 1){
-            char buffer[1024] = {0};
+            char *buffer;
             while (true) {
-                if (read(soc, buffer, sizeof(buffer)) <= 0) {
-                    break;
-                }
-                // send(soc, buffer, strlen(buffer), 0);
-                std::cout << buffer << std::endl;
-                memset(buffer, 0, sizeof(buffer));
+                size_t dataLength;
+                recv(soc, &dataLength, sizeof(size_t), 0);
+                dataLength = ntohl(dataLength );
+                buffer = new char[ dataLength ];
 
-                std::cout << "> " ;
-                std::string msg ;
+                recv(soc,&(buffer[0]),dataLength,0);
+                std::string receivedString;
+                receivedString.assign(buffer,dataLength);
+                buffer = nullptr;
+
+                std::cout << receivedString << std::endl;
+
+                std::cout << "> ";
+                std::string msg;
                 std::getline(std::cin >> std::ws, msg);
-                char *message = (char *)&msg;
+                std::string message = msg + "   [<] " + name;
+                dataLength = htonl(message.size());
+                send(soc, &dataLength, sizeof(size_t), 0);
+                send(soc, message.c_str(), message.size(), 0);
 
-                const char* strToAddFirst = "   [<] ";
-                const char* strToAddSecond = name.c_str();
-                std::strcat(message, strToAddFirst);
-                std::strcat(message, strToAddSecond);
-
-
-
-                send(soc, message, strlen(message), 0);
             }
         }
     }
 }
+

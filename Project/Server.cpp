@@ -20,6 +20,7 @@ unsigned int id = 0;
 void startConversation(int clientSocket);
 void handleCommunication(int clientSocket, int clientToSpeak, std::string name);
 
+
 int main(){
     int s = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -137,19 +138,37 @@ void handleCommunication(int clientSocket, int clientToSpeak, std::string name){
     std::cout << std::stoi(selectedOption) << std::endl;
     send(clientSocket, selectedOption, strlen(selectedOption), 0);
     if(std::stoi(selectedOption) == 1){
-        char buffer[1024] = {0};
-        while (true) {
-            if (read(clientSocket, buffer, sizeof(buffer)) <= 0) {
-                break;
-            }
-            send(clientToSpeak, buffer, strlen(buffer), 0);
-            memset(buffer, 0, sizeof(buffer));
-            if (read(clientToSpeak, buffer, sizeof(buffer)) <= 0) {
-                break;
-            }
-            send(clientSocket, buffer, strlen(buffer), 0);
-            memset(buffer, 0, sizeof(buffer));
+        char *buffer;
+        while(true){
+            size_t dataLength;
+            recv(clientSocket, &dataLength, sizeof(size_t), 0);
+            dataLength = ntohl(dataLength);
+            buffer = new char[ dataLength ];
+
+            recv(clientSocket,&(buffer[0]),dataLength,0);
+            std::string receivedString;
+            receivedString.assign(buffer,dataLength);
+            buffer = nullptr;
+
+            dataLength = htonl(receivedString.size());
+            send(clientToSpeak, &dataLength, sizeof(size_t), 0);
+            send(clientToSpeak, receivedString.c_str(), receivedString.size(), 0);
+
+            recv(clientToSpeak, &dataLength, sizeof(size_t), 0);
+            dataLength = ntohl(dataLength );
+            buffer = new char[ dataLength];
+
+            recv(clientToSpeak,&(buffer[0]),dataLength,0);
+            receivedString.assign(buffer,dataLength);
+            buffer = nullptr;
+
+            dataLength = htonl(receivedString.size());
+            send(clientSocket, &dataLength, sizeof(size_t), 0);
+            send(clientSocket, receivedString.c_str(), receivedString.size(), 0);
         }
+    
     }
 
 }
+
+// nothyinnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
