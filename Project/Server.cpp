@@ -3,6 +3,7 @@
 #include<arpa/inet.h>
 #include<unistd.h>
 #include<thread>
+#include <sstream>
 
 #define PORT 8081
 
@@ -10,7 +11,6 @@ struct Data{
     std::string id;
     int clientSocket;
     std::string name;
-    // bool waiting = false;
     Data(std::string idNumber,int cS, std::string cName) : id(idNumber), clientSocket(cS), name(cName) {}
 };
 
@@ -18,7 +18,12 @@ std::vector<Data> clientSockets;
 unsigned int id = 0;
 
 void startConversation(int clientSocket);
-void handleCommunication(int clientSocket, int clientToSpeak, std::string name);
+std::string receiveMsg(int clientSocket);
+void sendMsg(int clientSocket, std::string receivedString);
+std::string getAvailableUser(std::string userID);
+bool checkAvailableClients(std::string userID, std::string id);
+std::vector<std::string> split(const std::string &str);
+void handleClient(int clientSocket, std::string userID);
 
 
 int main(){
@@ -54,121 +59,145 @@ int main(){
 
 void startConversation(int clientSocket){
     try{
-        const char *qName = "What is your name?";
-        char name[50] = {0};
-        send(clientSocket, qName, strlen(qName), 0);
-        read(clientSocket, name, 1024);
+        std::string qName = "What is your name?";
+        sendMsg(clientSocket, qName);
+        std::string name = receiveMsg(clientSocket);
         std::cout << "Client named " << name << " joined!" << std::endl;
         id += 1;
         std::string userID = std::to_string(id);
-        send(clientSocket, &userID, userID.length(), 0);
-        std::string dummy;
-        read(clientSocket, &dummy, sizeof(dummy));
         clientSockets.push_back(Data(userID, clientSocket, name));
+        std::string availableClients = getAvailableUser(userID);
+        sendMsg(clientSocket, availableClients);
+        std::string info = "Enter either of this format [(Id number ~ message) or (Id num1, Id num2 ,... ~ message) or (0 to show available user) or (q to quit)]";
+        sendMsg(clientSocket, info);
+        std::thread t1(handleClient, clientSocket, userID);
+        t1.join();
+        
 
-        const char *displayOptions = "1. Connect with user 2. Wait to connect 3.Exit";
-
-        send(clientSocket, displayOptions, strlen(displayOptions), 0);
-        char selectedOption[10] = {0};
-        while(true){
-            read(clientSocket, selectedOption, sizeof(selectedOption));
-            if((std::stoi(selectedOption) == 1) || (std::stoi(selectedOption) == 2) || (std::stoi(selectedOption) == 3)){
-                const char *validReply = "Valid";
-                send(clientSocket, validReply, strlen(validReply), 0);
-                break;
-            }else{
-                const char *validReply = "Invalid";
-                send(clientSocket, validReply, strlen(validReply), 0);
-            }
-        }
-        std::cout << std::stoi(selectedOption) << std::endl;
-
-        if(std::stoi(selectedOption) == 3){
-            clientSockets.erase(std::remove_if(clientSockets.begin(), clientSockets.end(),[&](Data const &data){
-                return data.clientSocket == clientSocket;
-            }),clientSockets.end());
-            close(clientSocket);
-        }else if(std::stoi(selectedOption) == 1){
-            while(true){
-                int clientToSpeak;
-                bool valid = false;
-                const char *toConnectOption = "Enter userID to connect";
-                char selectedUserID[1024] = {0};
-                send(clientSocket, toConnectOption, strlen(toConnectOption), 0);
-                while(true){
-                    read(clientSocket, selectedUserID, sizeof(selectedUserID));
-                    std::cout << "User ID: " << selectedUserID << std::endl;
-                    for(Data data: clientSockets){
-                        if(data.id == selectedUserID && selectedUserID != userID){
-                            valid = true;
-                            clientToSpeak = data.clientSocket;
-                            break;
-                        }else{
-                            valid = false;
-                        }
-                    }
-                    if(valid){
-                        const char *validReply = "Valid";
-                        send(clientSocket, validReply, strlen(validReply), 0);
-                        break;
-                    }else{
-                        const char *validReply = "Invalid";
-                        send(clientSocket, validReply, strlen(validReply), 0);
-                    }
-                }
-                handleCommunication(clientSocket, clientToSpeak, name);
-            }
-        }
     }catch(...){
         clientSockets.erase(std::remove_if(clientSockets.begin(), clientSockets.end(),[&](Data const &data){
             return data.clientSocket == clientSocket;
         }),clientSockets.end());
         close(clientSocket);
     }
+    clientSockets.erase(std::remove_if(clientSockets.begin(), clientSockets.end(),[&](Data const &data){
+        return data.clientSocket == clientSocket;
+    }),clientSockets.end());
+    close(clientSocket);
 }
 
-void handleCommunication(int clientSocket, int clientToSpeak, std::string name){
-    std::cout << "Client socket :" << clientSocket << "\tClient to speak : " << clientToSpeak << std::endl;
-    std::string display = "1. Accept 2.Reject from " + name;
-    const char *displayOptions = display.c_str();
-
-    char selectedOption[10] = {0};
-    send(clientToSpeak, displayOptions, display.size(), 0);
-    read(clientToSpeak, selectedOption, sizeof(selectedOption));
-    std::cout << std::stoi(selectedOption) << std::endl;
-    send(clientSocket, selectedOption, strlen(selectedOption), 0);
-    if(std::stoi(selectedOption) == 1){
-        char *buffer;
-        while(true){
-            size_t dataLength;
-            recv(clientSocket, &dataLength, sizeof(size_t), 0);
-            dataLength = ntohl(dataLength);
-            buffer = new char[ dataLength ];
-
-            recv(clientSocket,&(buffer[0]),dataLength,0);
-            std::string receivedString;
-            receivedString.assign(buffer,dataLength);
-            buffer = nullptr;
-
-            dataLength = htonl(receivedString.size());
-            send(clientToSpeak, &dataLength, sizeof(size_t), 0);
-            send(clientToSpeak, receivedString.c_str(), receivedString.size(), 0);
-
-            recv(clientToSpeak, &dataLength, sizeof(size_t), 0);
-            dataLength = ntohl(dataLength );
-            buffer = new char[ dataLength];
-
-            recv(clientToSpeak,&(buffer[0]),dataLength,0);
-            receivedString.assign(buffer,dataLength);
-            buffer = nullptr;
-
-            dataLength = htonl(receivedString.size());
-            send(clientSocket, &dataLength, sizeof(size_t), 0);
-            send(clientSocket, receivedString.c_str(), receivedString.size(), 0);
+std::vector<std::string> split(const std::string &str, char sep){
+    std::vector<std::string> tokens;
+    std::string token;
+    std::stringstream ss(str);
+    std::string sep2 = "";
+    sep2 = sep;
+    while (std::getline(ss, token, sep)) {
+        if (!token.empty()) {
+            if(token.compare(sep2) != 0){
+                tokens.push_back(token);
+            }
         }
-    
     }
-
+    return tokens;
 }
 
-// nothyinnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+void handleClient(int clientSocket, std::string userID) {
+    while(true){
+        std::string msg = receiveMsg(clientSocket);
+        std::vector<std::string> tokens = split(msg, '~');
+        // for(auto i: tokens){
+        //     std::cout << i << std::endl;
+        // }
+        if(tokens.front() == "0"){
+            std::string availableClients = getAvailableUser(userID);
+            sendMsg(clientSocket, availableClients);
+        }else if(tokens.front() == "q" || tokens.front() == "Q"){
+            std::string exitMsg = "Exiting...";
+            sendMsg(clientSocket, exitMsg);
+            break;
+        }else{  
+
+            std::vector<std::string> clientsToSend = split(tokens.front(), ',');
+            for(auto i: clientsToSend){
+                bool available = false;
+                available = checkAvailableClients(userID,i);
+                if(available){
+                    for(Data data: clientSockets){
+                        if(data.id == i){
+                            sendMsg(data.clientSocket, tokens.back());
+                        }
+                    }
+                }
+            }          
+            // for(auto i: tokens){
+            //     std::cout << "token : " << i << std::endl;
+            //     if(i != tokens.back()){
+            //         bool available = false;
+            //         available = checkAvailableClients(userID,i);
+            //         if(available){
+            //             for(Data data: clientSockets){
+            //                 if(data.id == i){
+            //                     sendMsg(data.clientSocket, tokens.back());
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+        }
+
+    }
+    clientSockets.erase(
+    std::remove_if(clientSockets.begin(), clientSockets.end(), [&](Data const & data) {
+        return data.clientSocket == clientSocket;
+    }),
+    clientSockets.end());
+    close(clientSocket);   
+}
+
+std::string receiveMsg(int clientSocket){
+    char *buffer = nullptr;
+    size_t dataLength;
+    recv(clientSocket, &dataLength, sizeof(size_t), 0);
+    dataLength = ntohl(dataLength);
+    buffer = new char[ dataLength ];
+
+    recv(clientSocket,&(buffer[0]),dataLength,0);
+    std::string receivedString;
+    receivedString.assign(buffer,dataLength);
+    return receivedString;
+}
+
+void sendMsg(int clientSocket, std::string receivedString){
+    size_t dataLength;
+    dataLength = htonl(receivedString.size());
+    send(clientSocket, &dataLength, sizeof(size_t), 0);
+    send(clientSocket, receivedString.c_str(), receivedString.size(), 0);
+}
+
+std::string getAvailableUser(std::string userID){
+    std::string availableClients;
+    bool notAvailable = true;
+    for(Data data:clientSockets){
+        if(data.id != userID){
+            std::string formatedString = "\nId: " + data.id + " Name: " + data.name;
+            availableClients.append(formatedString);
+            notAvailable = false;
+        }
+    }
+    if(notAvailable){
+        return "NO USER AVAILABLE";
+    }
+    return availableClients;
+}
+   
+
+bool checkAvailableClients(std::string userID, std::string id){
+    bool available = false;
+    for(Data data:clientSockets){
+        if(data.id != userID && data.id == id){
+            available = true;
+        }
+    }
+    return available;
+}
