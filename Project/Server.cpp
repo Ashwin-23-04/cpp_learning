@@ -68,7 +68,7 @@ void startConversation(int clientSocket){
         clientSockets.push_back(Data(userID, clientSocket, name));
         std::string availableClients = getAvailableUser(userID);
         sendMsg(clientSocket, availableClients);
-        std::string info = "Enter either of this format [(Id number ~ message) or (Id num1, Id num2 ,... ~ message) or (0 to show available user) or (q to quit)]";
+        std::string info = "\nEnter either of this format \n\n(a) Id number ~ message \n(b) Id num1, Id num2 ,... ~ message \n(c) 0 to show available user \n(d) q to quit\n";
         sendMsg(clientSocket, info);
         std::thread t1(handleClient, clientSocket, userID);
         t1.join();
@@ -129,21 +129,7 @@ void handleClient(int clientSocket, std::string userID) {
                         }
                     }
                 }
-            }          
-            // for(auto i: tokens){
-            //     std::cout << "token : " << i << std::endl;
-            //     if(i != tokens.back()){
-            //         bool available = false;
-            //         available = checkAvailableClients(userID,i);
-            //         if(available){
-            //             for(Data data: clientSockets){
-            //                 if(data.id == i){
-            //                     sendMsg(data.clientSocket, tokens.back());
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
+            }
         }
 
     }
