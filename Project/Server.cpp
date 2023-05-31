@@ -68,7 +68,7 @@ void startConversation(int clientSocket){
         clientSockets.push_back(Data(userID, clientSocket, name));
         std::string availableClients = getAvailableUser(userID);
         sendMsg(clientSocket, availableClients);
-        std::string info = "\nEnter either of this format \n\n(a) Id number~message \n(b) Id num1, Id num2, etc...~message \n\n (or)\n\n 0 - show available user \n q - quit\n";
+        std::string info = "\nEnter either of this format \n\n(a) Id number~message - chat with user at a time \n(b) Id num1, Id num2, etc...~message - chat with multiple user at a time \n(c) 0 - show available user \n(d) q - quit\n";
         sendMsg(clientSocket, info);
         std::thread t1(handleClient, clientSocket, userID);
         t1.join();
@@ -116,7 +116,7 @@ std::string getAvailableUser(std::string userID){
         }
     }
     if(notAvailable){
-        return "NO USER AVAILABLE";
+        return "\nNO USER AVAILABLE";
     }
     return availableClients;
 }

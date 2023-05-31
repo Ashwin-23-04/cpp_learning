@@ -42,7 +42,7 @@ void sendMsg(int soc, std::string name){
         if(input == "0" ){}
         else if(input == "q" || input == "Q"){}
         else{
-            input += " [" + name + "]";
+            input += "\t<[" + name + "]";
         }
         size_t dataLength;
         dataLength = htonl(input.size());
