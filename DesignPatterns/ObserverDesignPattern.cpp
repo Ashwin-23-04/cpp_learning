@@ -5,14 +5,14 @@ class Observer{
         virtual void update(float temperature, float pressure, float humidity) = 0;
 };
 
-class Object{
+class Publisher{
     public:
         virtual void registerObserver(Observer *observer) = 0;
         virtual void removeObserver(Observer *observer) = 0;
         virtual void notifyObservers() = 0;
 };
 
-class WeatherData : Object {
+class WeatherData : Publisher {
     private:
         std::vector<Observer *> observers;
         float temperature = 0.0f;
@@ -41,11 +41,11 @@ class WeatherData : Object {
         }
 };
 
-class Client : public Observer{
+class Subscriber : public Observer{
     private:
         std::string name;
     public:
-        Client(std::string name){
+        Subscriber(std::string name){
             this->name = name;
         }
         void update(float temperature, float pressure , float humidity){
@@ -56,17 +56,16 @@ class Client : public Observer{
 
 int main(){
     WeatherData weatherdata;
-    Client c1("Ashwin");
-    Client c2("Max");
-    Client c3("Jacky");
-    weatherdata.registerObserver(&c1);
-    weatherdata.registerObserver(&c2);
-    weatherdata.registerObserver(&c3);
+    Subscriber s1("Ashwin");
+    Subscriber s2("Max");
+    Subscriber s3("Jacky");
+    weatherdata.registerObserver(&s1);
+    weatherdata.registerObserver(&s2);
+    weatherdata.registerObserver(&s3);
 
     weatherdata.setState(45, 3.9, 12);
 
-    weatherdata.removeObserver(&c1);
-
+    weatherdata.removeObserver(&s1);
     weatherdata.setState(46,4,15);
 
     return 0;
