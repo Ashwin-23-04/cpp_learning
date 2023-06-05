@@ -1,11 +1,11 @@
 #include<iostream>
 
-class OperationStrategy{
+class Strategy{
     public:
         virtual void compute(){}
 };
 
-class Operation : public OperationStrategy{
+class Operation : public Strategy{
     private:
         int a;
         int b;
@@ -42,9 +42,9 @@ class MinusOperation : public Operation{
 
 class Calc {
     private:
-        OperationStrategy *strategy;
+        Strategy *strategy;
     public:
-        Calc(OperationStrategy *strategy){
+        Calc(Strategy *strategy){
             this->strategy = strategy;
         }
         void compute(){
