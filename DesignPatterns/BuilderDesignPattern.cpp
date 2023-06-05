@@ -1,7 +1,3 @@
-/*
-Builder Pattern is used when we build a very complex object which has a lot of configurations in it.
-*/
-
 #include<iostream>
 
 class Packing {

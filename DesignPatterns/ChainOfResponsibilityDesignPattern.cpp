@@ -4,17 +4,16 @@ class Numbers{
     private:
         int num1;
         int num2;
-        std::string calculationWanted;
+        std::string result;
     public:
-        Numbers (int n1, int n2, std::string cW) : num1(n1), num2(n2), calculationWanted(cW) {}
+        Numbers (int n1, int n2, std::string cW) : num1(n1), num2(n2), result(cW) {}
         int getNum1(){return num1;}
         int getNum2(){return num2;}
-        std::string getCalcWanted(){return calculationWanted;}
+        std::string getCalcWanted(){return result;}
 };
 
 class Chain{
     public:
-    std::string check;
         virtual void setNextChain(Chain *nextChain){}
         virtual void calculate(Numbers request){}
 };
@@ -40,7 +39,6 @@ class SubtractNumbers : public Chain {
     private:
         Chain *nextInChain;
     public:
-        std::string check = "sub";
         void setNextChain(Chain *nextChain){
             nextInChain = nextChain;
         }
@@ -95,7 +93,7 @@ int main(){
     calc2->setNextChain(calc3);
     calc3->setNextChain(calc4);
 
-    Numbers request = Numbers(4,2,"Mult");
+    Numbers request = Numbers(4,2,"Sub");
     calc1->calculate(request); 
 
     return 0;
