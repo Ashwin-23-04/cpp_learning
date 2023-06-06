@@ -53,11 +53,12 @@ class Calc {
 };
 
 int main(){
-    PlusOperation plusOperation(6, 7);
-    Calc calc1 = Calc(&plusOperation);
+    Operation *op = new PlusOperation(6, 7);
+    Calc calc1 = Calc(op);
     calc1.compute();
-    MinusOperation minusOperation(4,3);
-    Calc calc2 = Calc(&minusOperation);
+    op = nullptr;
+    op = new MinusOperation(4,3);
+    Calc calc2 = Calc(op);
     calc2.compute();
     return 0;
 }
