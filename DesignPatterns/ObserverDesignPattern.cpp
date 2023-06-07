@@ -12,7 +12,7 @@ class Publisher{
         virtual void notifyObservers() = 0;
 };
 
-class WeatherData : Publisher {
+class WeatherStation : Publisher {
     private:
         std::vector<Observer *> observers;
         float temperature = 0.0f;
@@ -55,7 +55,7 @@ class Subscriber : public Observer{
 
 
 int main(){
-    WeatherData weatherdata;
+    WeatherStation weatherdata;
     Subscriber s1("Ashwin");
     Subscriber s2("Max");
     Subscriber s3("Jacky");
