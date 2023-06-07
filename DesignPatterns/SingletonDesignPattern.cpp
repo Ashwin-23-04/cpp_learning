@@ -2,11 +2,11 @@
 
 class DataBase{
     private:
+        static DataBase db;
         DataBase(){}
         int arr[4];
     public:
         static DataBase& getInstance(){
-            static DataBase db;
             return db;
         }
         void makeArray(int x, int y, int z){
