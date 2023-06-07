@@ -25,16 +25,10 @@ class DataBase{
         }
 };
 
-void arrayys(){
-    int arr[4] = {1,2,3,4};
-
-}
-
 int main(){
     DataBase& db = DataBase::getInstance();
     db.makeArray(4,5,6);
     db.show();
-    arrayys();
     DataBase& db2 = DataBase::getInstance();
     db2.lastElement(7);
     db2.show();
