@@ -1,5 +1,8 @@
 #include<iostream>
+#include<thread>
+#include<mutex>
 
+std::mutex m;
 class DataBase{
     private:
         static DataBase *db;
@@ -25,21 +28,41 @@ class DataBase{
 
 DataBase *DataBase::db = nullptr;
 DataBase *DataBase::getInstance(){
+    // m.lock();
+    // if(db == nullptr){
+    //     std::cout << "New Instance Created" << std::endl;
+    //     db = new DataBase();
+    // }
+    // m.unlock();
+    // return db;
+
     if(db == nullptr){
-        db = new DataBase();
-        return db;
-    }else{
-        return db;
+        m.lock();
+        if(db == nullptr){
+            std::cout << "New Instance Created" << std::endl;
+            db = new DataBase();
+        }
+        m.unlock();
     }
+    return db;    
+}
+
+void callInstance(){
+    DataBase* db = DataBase::getInstance();
 }
 
 int main(){
-    DataBase* db = DataBase::getInstance();
-    db->makeArray(4,5,6);
-    db->show();
-    DataBase* db2 = DataBase::getInstance();
-    db2->lastElement(7);
-    db2->show();
+    // DataBase* db = DataBase::getInstance();
+    // db->makeArray(4,5,6);
+    // db->show();
+    // DataBase* db2 = DataBase::getInstance();
+    // db2->lastElement(7);
+    // db2->show();
+    std::thread t1(callInstance);
+    std::thread t2(callInstance);
+
+    t1.join();
+    t2.join();
 
     return 0;
 }
