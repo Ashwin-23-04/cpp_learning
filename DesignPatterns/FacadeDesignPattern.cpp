@@ -1,57 +1,43 @@
 #include<iostream>
 
-class Shape{
+class AC{
     public:
-        virtual void draw(){}
+    void on(){
+        std::cout << "AC is on" << std::endl;
+    }
+    void off(){
+        std::cout << "AC is off" << std::endl;
+    }
 };
 
-class Circle : public Shape{
+class TV{
     public:
-        void draw(){
-            std::cout << "Drawing Circle" << std::endl;
-        }
+    void on(){
+        std::cout << "TV is on" << std::endl;
+    }
+    void off(){
+        std::cout << "TV is off" << std::endl;
+    }
 };
 
-class Rectangle : public Shape{
-    public:
-        void draw(){
-            std::cout << "Drawing Rectangle" << std::endl;
-        }
-};
-
-class Triangle : public Shape{
-    public:
-        void draw(){
-            std::cout << "Drawing Triangle" << std::endl;
-        }
-};
-
-class ShapeMaker{
+class Facade{
     private:
-        Shape *circle;
-        Shape *rectangle;
-        Shape *triangle;
+        AC ac;
+        TV tv;
     public:
-        ShapeMaker(){
-            circle = new Circle;
-            rectangle = new Rectangle;
-            triangle = new Triangle;
+        void goForWork(){
+            ac.off();
+            tv.off();
         }
-        void drawCircle(){
-            circle->draw();
-        }
-        void drawRectangle(){
-            rectangle->draw();
-        }
-        void drawTriangle(){
-            triangle->draw();
+        void comeHome(){
+            ac.on();
+            tv.on();
         }
 };
 
 int main(){
-    ShapeMaker shapeMaker;
-    shapeMaker.drawCircle();
-    shapeMaker.drawRectangle();
-    shapeMaker.drawTriangle();
+    Facade f;
+    f.comeHome();
+    f.goForWork();
     return 0;
 }
