@@ -2,8 +2,8 @@
 #include<map>
 
 enum Type{
-    DEVELOPER,
-    TESTER
+    DEVELOPER = 0,
+    TESTER = 1
 };
 
 class Employee{
@@ -48,9 +48,14 @@ class EmployeeFactory{
     private:
         std::map<Type, Employee*> empMap;
     public:
+        EmployeeFactory(){
+            empMap[DEVELOPER] = nullptr;
+            empMap[TESTER] = nullptr;
+        }
         Employee* getEmployee(Type type){
             Employee *emp = nullptr;
             std::map<Type, Employee*>::iterator iter = empMap.find(type);
+            
             if(iter->second != nullptr){
                 emp = iter->second;
             }else{
@@ -64,18 +69,21 @@ class EmployeeFactory{
                     emp = new Tester();
                     break;
                 }
-                empMap.insert(std::make_pair(type, emp));
+
+                empMap[type] = emp;
             }
             return emp;
         }
 };
 
 int main(){
-    Employee *e1 = new Developer();
-    Employee *e2 = new Tester();
-    Employee *e3 = new Developer();
-    Employee *e4 = new Tester();
+    EmployeeFactory *empFactory = new EmployeeFactory();
     
+    Employee *e1 = empFactory->getEmployee(DEVELOPER);
+    Employee *e2 = empFactory->getEmployee(TESTER);
+    Employee *e3 = empFactory->getEmployee(DEVELOPER);
+    Employee *e4 = empFactory->getEmployee(TESTER);
+
     e1->assignSkill("JAVA");
     e2->assignSkill("C");
     e1->task();
