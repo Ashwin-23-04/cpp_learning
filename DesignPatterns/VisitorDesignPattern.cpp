@@ -50,7 +50,7 @@ class Circle : public Shape{
         }
 };
 
-class ShapeVisitor: public Visitor{
+class AreaVisitor: public Visitor{
     public:
         void visit(Rectangle *rectangle){
             std::cout << "Area of Rectangle is " << rectangle->getWidth() * rectangle->getHeight()  << std::endl;
@@ -63,7 +63,7 @@ class ShapeVisitor: public Visitor{
 int main(){
     // Shape *shape = new Rectangle(2,3);
     Shape *shape = new Circle(2);
-    Visitor *eVisitor = new ShapeVisitor();
+    Visitor *eVisitor = new AreaVisitor();
     shape->accept(eVisitor);
     return 0;
 }
